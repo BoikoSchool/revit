@@ -1,0 +1,603 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Revit 2024 з нуля</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: робоче місце креслярa — бічний «Диспетчер уроків» ліворуч, аркуш уроку праворуч; заголовки уроків оформлені як позначки рівнів Revit */
+:root{
+  --bg:#eef2f1; --surface:#ffffff; --sunk:#e3e9e7; --ink:#15201e; --muted:#56655f; --line:#cfd8d5;
+  --accent:#0d5b6b; --accent-soft:#d6ebee; --accent-ink:#ffffff;
+  --mark:#b4561d; --mark-soft:#f6e4d8;
+  --ok:#2f7a3f; --ok-soft:#dcefdf; --warn:#9a5b00; --warn-soft:#fbecd2;
+  --f-display:"Unbounded","Arial Black",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",Roboto,Arial,sans-serif;
+  --f-mono:"JetBrains Mono",Consolas,"Courier New",monospace;
+  --side-w:300px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1514; --surface:#162020; --sunk:#1d2928; --ink:#e3ebe8; --muted:#9aaba5; --line:#2b3a38;
+  --accent:#58b7c8; --accent-soft:#163a41; --accent-ink:#06191d;
+  --mark:#e58a50; --mark-soft:#3d2618;
+  --ok:#6cc27d; --ok-soft:#173222; --warn:#e3a647; --warn-soft:#3a2b12;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0f1514; --surface:#162020; --sunk:#1d2928; --ink:#e3ebe8; --muted:#9aaba5; --line:#2b3a38;
+  --accent:#58b7c8; --accent-soft:#163a41; --accent-ink:#06191d;
+  --mark:#e58a50; --mark-soft:#3d2618;
+  --ok:#6cc27d; --ok-soft:#173222; --warn:#e3a647; --warn-soft:#3a2b12;
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--surface)}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line);
+  padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;align-items:center;gap:14px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:15px;letter-spacing:.01em;white-space:nowrap}
+.brand span{color:var(--accent)}
+.menu-btn{display:none;border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:14px}
+.prog{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bar{width:140px;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+
+.app{display:grid;grid-template-columns:var(--side-w) minmax(0,1fr);min-height:calc(100vh - 52px)}
+.side{border-right:1px solid var(--line);background:var(--surface);padding:18px 12px 40px max(12px,env(safe-area-inset-left,0px));
+  position:sticky;top:calc(52px + env(safe-area-inset-top,0px));height:calc(100vh - 52px - env(safe-area-inset-top,0px));overflow-y:auto}
+.side h4{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:18px 10px 6px;font-weight:600}
+.side h4:first-child{margin-top:0}
+.nav a{display:grid;grid-template-columns:28px 1fr 18px;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:14.5px;line-height:1.3}
+.nav a:hover{background:var(--sunk)}
+.nav a.on{background:var(--accent-soft);color:var(--ink);font-weight:600}
+.nav .n{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.nav .d{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line)}
+.nav .d.done{background:var(--ok);border-color:var(--ok);position:relative}
+.nav .d.done::after{content:"";position:absolute;left:4.5px;top:1.5px;width:4px;height:8px;border:solid var(--surface);border-width:0 2px 2px 0;transform:rotate(45deg)}
+
+main{padding-block:28px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));min-width:0}
+.sheet{max-width:780px;margin:0 auto}
+
+/* level marker header */
+.level{display:flex;align-items:center;gap:10px;color:var(--mark);font-family:var(--f-mono);font-size:12.5px;font-weight:700;letter-spacing:.04em;margin-bottom:10px}
+.level svg{flex:none}
+.level::after{content:"";flex:1;border-top:1.5px dashed var(--mark);opacity:.55}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4.2vw,38px);line-height:1.15;margin:0 0 12px;text-wrap:balance;letter-spacing:-.01em}
+.lead{font-size:18px;color:var(--muted);margin:0 0 26px;max-width:64ch}
+h2{font-family:var(--f-display);font-weight:500;font-size:20px;margin:38px 0 12px;text-wrap:balance}
+p{margin:0 0 14px;max-width:68ch}
+.goal{display:flex;flex-wrap:wrap;gap:8px;margin:-8px 0 26px}
+.goal span{font-size:13px;background:var(--sunk);border-radius:999px;padding:4px 12px;color:var(--muted)}
+
+/* UI path chips — як кнопки стрічки */
+.path{display:inline-flex;flex-wrap:wrap;align-items:center;gap:4px;vertical-align:middle}
+.ui{display:inline-block;font-family:var(--f-body);font-weight:600;font-size:14px;background:var(--accent-soft);color:var(--ink);border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:5px;padding:1px 8px;line-height:1.5}
+.sep{color:var(--muted);font-size:13px}
+kbd{font-family:var(--f-mono);font-size:12.5px;font-weight:700;background:var(--surface);border:1px solid var(--line);border-bottom-width:3px;border-radius:5px;padding:1px 7px;white-space:nowrap}
+
+/* steps */
+.steps{list-style:none;padding:0;margin:0 0 18px;counter-reset:s;display:grid;gap:12px}
+.steps>li{counter-increment:s;display:grid;grid-template-columns:36px minmax(0,1fr);gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.steps>li::before{content:counter(s);font-family:var(--f-mono);font-weight:700;font-size:15px;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink)}
+.steps .do{font-weight:500;margin:4px 0 0}
+.steps .do p{margin:0}
+.see,.why{font-size:14.5px;margin-top:10px;padding-left:12px;border-left:3px solid var(--line);color:var(--muted)}
+.see b,.why b{color:var(--ink);font-weight:600}
+.see{border-left-color:var(--ok)}
+
+.note{border-radius:10px;padding:14px 16px;margin:0 0 18px;font-size:15px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;max-width:72ch}
+.note .tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding-top:3px}
+.note.tip{background:var(--accent-soft)} .note.tip .tag{color:var(--accent)}
+.note.warn{background:var(--warn-soft)} .note.warn .tag{color:var(--warn)}
+.note.idea{background:var(--mark-soft)} .note.idea .tag{color:var(--mark)}
+.note p:last-child{margin:0}
+
+.tbl{overflow-x:auto;margin:0 0 20px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;background:var(--sunk)}
+tr:last-child td{border-bottom:0}
+
+/* quiz */
+.quiz{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;margin:26px 0}
+.quiz .q{font-weight:600;margin-bottom:12px}
+.quiz .q small{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mark);font-weight:700;margin-bottom:4px}
+.opts{display:grid;gap:8px}
+.opt{text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:10px 14px;cursor:pointer;font-size:15px}
+.opt:hover{border-color:var(--accent)}
+.opt.right{background:var(--ok-soft);border-color:var(--ok)}
+.opt.wrong{background:var(--warn-soft);border-color:var(--warn)}
+.quiz .ex{margin-top:12px;font-size:14.5px;color:var(--muted)}
+
+/* checklist */
+.check{list-style:none;padding:0;margin:0 0 20px;display:grid;gap:6px}
+.check label{display:flex;gap:12px;align-items:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px;cursor:pointer}
+.check input{width:18px;height:18px;margin-top:3px;accent-color:var(--accent);flex:none}
+.check input:checked+span{color:var(--muted);text-decoration:line-through}
+
+/* interface map */
+.mapwrap{overflow-x:auto;margin:0 0 14px}
+.rv{min-width:560px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--sunk);display:grid;
+  grid-template-columns:150px 1fr;grid-template-rows:26px 26px 64px 26px 1fr 26px;height:400px;font-size:12px}
+.rv button{border:0;border-radius:0;cursor:pointer;text-align:left;padding:4px 8px;background:var(--surface);color:var(--muted);border:1px solid var(--line);margin:-.5px;font-size:12px;line-height:1.25;transition:background .15s}
+.rv button:hover{background:var(--accent-soft);color:var(--ink)}
+.rv button.on{background:var(--accent);color:var(--accent-ink);font-weight:600}
+.z-qat{grid-column:1/3}
+.z-tabs{grid-column:1/3;font-family:var(--f-body);white-space:nowrap;overflow:hidden}
+.z-rib{grid-column:1/3;display:flex;align-items:flex-end;gap:14px}
+.z-opt{grid-column:1/3}
+.z-left{display:grid;grid-template-rows:1fr 1fr;grid-row:5/6}
+.z-view{grid-row:5/6;position:relative;display:grid;place-items:center;text-align:center!important}
+.z-cube{position:absolute;right:12px;top:12px;width:46px;height:46px;font-size:10px!important;text-align:center!important;padding:2px!important}
+.z-vcb{grid-column:2/3;grid-row:6/7}
+.z-status{grid-column:1/2;grid-row:6/7}
+.mapinfo{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:14px 18px;min-height:96px;margin-bottom:22px}
+.mapinfo h3{margin:0 0 6px;font-size:16px}
+.mapinfo p{margin:0 0 6px;font-size:15px}
+
+/* nav footer */
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:44px;padding-top:20px;border-top:1px solid var(--line);flex-wrap:wrap}
+.pager a{text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 16px;max-width:48%;min-width:0}
+.pager a small{display:block;color:var(--muted);font-size:12px}
+.pager a.next{margin-left:auto;text-align:right}
+.donebtn{display:inline-flex;align-items:center;gap:10px;margin-top:30px;border:1.5px solid var(--accent);background:transparent;color:var(--accent);border-radius:999px;padding:10px 20px;font-weight:600;cursor:pointer}
+.donebtn.is{background:var(--ok);border-color:var(--ok);color:var(--surface)}
+
+/* home cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:12px 0 24px}
+.card{display:block;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}
+.card:hover{border-color:var(--accent)}
+.card .n{font-family:var(--f-mono);font-size:12px;color:var(--mark);font-weight:700}
+.card h3{margin:4px 0 4px;font-size:16px;line-height:1.3}
+.card p{margin:0;font-size:14px;color:var(--muted)}
+.card.done{border-color:var(--ok)}
+.card.done .n::after{content:" · пройдено";color:var(--ok)}
+
+.search{width:100%;font:inherit;font-size:16px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);margin:0 0 16px}
+.gl{display:grid;gap:8px}
+.gl div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+.gl b{display:block}
+.gl .ru{font-size:13px;color:var(--accent);font-weight:600}
+.gl p{margin:4px 0 0;font-size:15px;color:var(--muted)}
+.muted{color:var(--muted)}
+.reset{border:0;background:none;color:var(--muted);text-decoration:underline;cursor:pointer;font-size:13px;padding:0}
+
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .menu-btn{display:inline-block}
+  .side{position:fixed;left:0;top:calc(52px + env(safe-area-inset-top,0px));bottom:0;height:auto;width:min(320px,86vw);z-index:15;transform:translateX(-102%);transition:transform .22s;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+  .side.open{transform:none}
+  .bar{width:80px}
+  .prog .pt{display:none}
+  .pager a{max-width:100%;flex:1 1 100%}
+  .pager a.next{text-align:right}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="top">
+  <button class="menu-btn" id="menuBtn" aria-controls="side" aria-expanded="false">Уроки</button>
+  <div class="brand">Revit 2024 <span>з нуля</span></div>
+  <div class="prog"><span class="pt">Пройдено</span><span id="progTxt">0 / 0</span><div class="bar"><i id="progBar"></i></div></div>
+</header>
+<div class="app">
+  <nav class="side" id="side" aria-label="Уроки"></nav>
+  <main id="main"><div class="sheet"></div></main>
+</div>
+
+<script>
+/* =====================================================================
+   ЯК ДОДАТИ НОВУ ТЕМУ
+   Скопіюйте будь-який об'єкт у масиві LESSONS і змініть:
+     id      — латиницею, без пробілів (стане адресою: #roof)
+     title   — назва уроку
+     short   — один рядок для картки на головній
+     goals   — що учень вмітиме після уроку
+     blocks  — вміст. Типи блоків:
+       {t:'p', h:'текст'}                         абзац
+       {t:'h', h:'Підзаголовок'}                  підзаголовок
+       {t:'steps', items:[{do:'дія', see:'що з’явиться', why:'навіщо'}]}
+       {t:'note', kind:'tip'|'warn'|'idea', h:'текст'}
+       {t:'table', head:['…','…'], rows:[['…','…']]}
+       {t:'quiz', q:'питання', opts:['a','b','c'], a:0, ex:'пояснення'}
+       {t:'check', items:['пункт','пункт']}       список з галочками
+       {t:'map'}                                  інтерактивна схема інтерфейсу
+   Позначення в тексті:
+     [[Архитектура > Стена]]  — шлях до кнопки в російському інтерфейсі
+     {{WA}}                   — гаряча клавіша
+   ===================================================================== */
+const LESSONS = [
+{
+ id:'what', title:'Що таке Revit і як він «думає»',
+ short:'Модель замість креслення. П’ять слів, без яких далі не можна.',
+ goals:['Розумієте різницю між Revit і AutoCAD','Знаєте слова: модель, вид, рівень, тип, сімейство'],
+ blocks:[
+  {t:'p',h:'Revit — програма для <b>BIM-моделювання</b> (BIM — інформаційна модель будівлі). Ви не малюєте лінії, як на папері. Ви будуєте будинок з готових «цеглин»: стін, дверей, вікон, перекриттів. Креслення (план, фасад, розріз) Revit робить сам — це просто погляди на вашу модель з різних боків.'},
+  {t:'note',kind:'idea',h:'<p>Уявіть макет будинку на столі. План — це погляд згори, фасад — погляд збоку, 3D — погляд під кутом. Ви змінюєте макет — змінюються всі погляди одразу. Так працює Revit.</p>'},
+  {t:'h',h:'П’ять слів, які треба знати'},
+  {t:'table',head:['Слово','Як у програмі','Що означає'],rows:[
+   ['Модель','—','Увесь ваш будинок у 3D з усіма елементами'],
+   ['Вид','Вид','Спосіб подивитися на модель: план поверху, фасад, розріз, 3D'],
+   ['Рівень','Уровень','Висота поверху. Стіни і перекриття «стоять» на рівнях'],
+   ['Сімейство','Семейство','Різновид елемента: наприклад, «Одностворчаті двері»'],
+   ['Тип','Тип','Конкретний розмір у сімействі: двері 900×2100 мм']]},
+  {t:'h',h:'Три правила новачка'},
+  {t:'steps',items:[
+   {do:'Будуйте елементами, а не лініями.',why:'<b>Навіщо:</b> стіна, намальована двома лініями, — це не стіна. Revit не порахує її площу і не покаже на фасаді.'},
+   {do:'Одна зміна — всюди.',why:'<b>Навіщо:</b> посунули стіну на плані — вона посунеться на фасаді й у 3D. Не треба виправляти креслення окремо.'},
+   {do:'Спершу рівні, потім стіни.',why:'<b>Навіщо:</b> кожен елемент прив’язаний до рівня. Змінили висоту поверху — стіни підлаштуються.'}]},
+  {t:'note',kind:'tip',h:'<p>У посібнику кнопки програми підписані <b>так, як у російському інтерфейсі</b>, наприклад [[Архитектура > Стена]]. Шукайте на екрані саме ці слова. Гарячі клавіші виглядають так: {{WA}}.</p>'},
+  {t:'quiz',q:'Ви змінили висоту стіни на плані. Що станеться на фасаді?',opts:['Нічого, фасад треба виправити вручну','Стіна на фасаді зміниться сама','Фасад видалиться'],a:1,ex:'План і фасад — це два види однієї моделі. Зміна в моделі видна в усіх видах.'}
+ ]},
+{
+ id:'start', title:'Запуск і перший проєкт',
+ short:'Відкриваємо програму, обираємо шаблон, зберігаємо файл.',
+ goals:['Створюєте новий проєкт із шаблону','Правильно зберігаєте файл'],
+ blocks:[
+  {t:'steps',items:[
+   {do:'Запустіть Revit 2024 (ярлик на робочому столі або меню «Пуск»).',see:'<b>Побачите:</b> стартовий екран <span class="ui">Главная</span> з плитками останніх файлів. Перший запуск може тривати 1–2 хвилини.'},
+   {do:'Ліворуч, у блоці [[Модели]], натисніть [[Создать…]].',see:'<b>Побачите:</b> невелике вікно <span class="ui">Новый проект</span>.'},
+   {do:'У полі [[Файл шаблона]] оберіть архітектурний шаблон, наприклад <span class="ui">Архитектурный шаблон</span>. Якщо викладач дав свій шаблон — натисніть [[Обзор…]] і знайдіть файл <code>.rte</code>.',why:'<b>Навіщо:</b> шаблон — це «заготовка»: одиниці виміру (мм), готові типи стін, вигляд креслень.'},
+   {do:'Унизу в пункті [[Создать]] має бути позначено <span class="ui">Проект</span> (не «Шаблон проекта»). Натисніть <span class="ui">ОК</span>.',see:'<b>Побачите:</b> порожнє біле поле — це план <span class="ui">Уровень 1</span>, перший поверх.'},
+   {do:'Одразу збережіть: [[Файл > Сохранить как > Проект]]. Назва, наприклад, «Будинок_урок1».',see:'<b>Побачите:</b> назву файлу у верхньому рядку вікна програми.'}]},
+  {t:'h',h:'Типи файлів'},
+  {t:'table',head:['Розширення','Що це'],rows:[['.rvt','Файл проєкту — ваша модель'],['.rte','Шаблон проєкту'],['.rfa','Сімейство: окремий елемент (двері, стілець, вікно)']]},
+  {t:'note',kind:'warn',h:'<p>Якщо розміри показуються у футах і дюймах, обрано американський шаблон. Створіть проєкт заново з іншим шаблоном або змініть одиниці: [[Управление > Единицы проекта > Длина]] → <span class="ui">Миллиметры</span>.</p>'},
+  {t:'quiz',q:'Що обрати внизу вікна «Новый проект», щоб почати модель будинку?',opts:['Шаблон проекта','Проект'],a:1,ex:'«Шаблон проекта» створює нову заготовку для інших проєктів. Для звичайної роботи завжди обираємо «Проект».'}
+ ]},
+{
+ id:'ui', title:'Інтерфейс: що де знаходиться',
+ short:'Клікабельна схема вікна програми з поясненням кожної панелі.',
+ goals:['Знаходите Свойства, Диспетчер проекта і стрічку','Повертаєте зниклу панель'],
+ blocks:[
+  {t:'p',h:'Натискайте на частини схеми нижче — під нею з’явиться пояснення. Схема спрощена, але розташування таке саме, як у програмі.'},
+  {t:'map'},
+  {t:'h',h:'Найважливіше'},
+  {t:'p',h:'Ліва колонка — ваш головний помічник. Угорі <span class="ui">Свойства</span>: що виділено і які в нього параметри. Внизу <span class="ui">Диспетчер проекта</span>: список усіх видів, як зміст книжки.'},
+  {t:'note',kind:'warn',h:'<p><b>Зникла панель?</b> Відкрийте [[Вид > Пользовательский интерфейс]] і поставте галочку біля <span class="ui">Свойства</span> або <span class="ui">Диспетчер проекта</span>. Свойства також відкриваються клавішами {{PP}}.</p>'},
+  {t:'note',kind:'tip',h:'<p>Завжди поглядайте на <b>рядок стану</b> внизу ліворуч. Він підказує, що програма чекає від вас зараз, наприклад «Щелкните, чтобы указать начальную точку стены».</p>'},
+  {t:'quiz',q:'Де змінити тип стіни, яку ви виділили?',opts:['У Диспетчере проекта','У списку вгорі панелі Свойства','На Панели управления видом'],a:1,ex:'Список угорі панелі «Свойства» називається «Селектор типов». У ньому обирають тип виділеного елемента.'}
+ ]},
+{
+ id:'nav', title:'Навігація: як рухатися по моделі',
+ short:'Зум, зсув, обертання 3D і перемикання між видами.',
+ goals:['Вільно рухаєтеся мишею','Відкриваєте план, фасад і 3D'],
+ blocks:[
+  {t:'table',head:['Дія','Як зробити'],rows:[
+   ['Наблизити / віддалити','Прокрутити коліщатко миші (наближає туди, де курсор)'],
+   ['Зсунути вид','Затиснути коліщатко і вести мишу'],
+   ['Обертати в 3D','<kbd>Shift</kbd> + затиснуте коліщатко'],
+   ['Показати все','Двічі клацнути коліщатком, або {{ZE}}'],
+   ['Відкрити 3D','Будиночок на панелі швидкого доступу'],
+   ['Перемкнути відкриті види','<kbd>Ctrl</kbd> + <kbd>Tab</kbd>']]},
+  {t:'h',h:'Як відкрити потрібний вид'},
+  {t:'steps',items:[
+   {do:'У <span class="ui">Диспетчере проекта</span> знайдіть розділ <span class="ui">Виды (все)</span>.'},
+   {do:'Натисніть на трикутник біля <span class="ui">Планы этажей</span>.',see:'<b>Побачите:</b> <span class="ui">Уровень 1</span>, <span class="ui">Уровень 2</span> — плани поверхів.'},
+   {do:'Двічі клацніть назву виду.',see:'<b>Побачите:</b> вид відкриється в новій вкладці в центрі екрана.'},
+   {do:'Так само відкривайте <span class="ui">Фасады</span> (Север, Юг, Восток, Запад) і <span class="ui">3D виды</span>.'}]},
+  {t:'note',kind:'idea',h:'<p>У 3D-виді праворуч угорі є <b>видовий куб</b> (ViewCube) з написами <span class="ui">Спереди</span>, <span class="ui">Сверху</span> тощо. Клацніть грань — модель повернеться цією стороною. Значок будиночка біля куба повертає звичний вигляд.</p>'},
+  {t:'note',kind:'tip',h:'<p>Відкрито забагато вкладок і все гальмує? [[Вид > Окна > Закрыть неактивные]] закриває всі, крім поточної.</p>'}
+ ]},
+{
+ id:'levels', title:'Рівні та осі',
+ short:'Задаємо висоти поверхів і сітку осей — каркас будинку.',
+ goals:['Змінюєте висоту рівня','Додаєте рівень і будуєте осі'],
+ blocks:[
+  {t:'p',h:'Рівні — це висоти поверхів. Осі — лінії, по яких ставлять стіни й колони. Їх роблять першими, як розмітку на будмайданчику.'},
+  {t:'h',h:'Рівні (Уровень)'},
+  {t:'steps',items:[
+   {do:'Відкрийте фасад: [[Диспетчер проекта > Фасады > Юг]].',see:'<b>Побачите:</b> горизонтальні лінії <span class="ui">Уровень 1</span> і <span class="ui">Уровень 2</span> з висотами праворуч (наприклад 0.000 і 4.000).'},
+   {do:'Клацніть по лінії рівня 2, потім по числу висоти. Введіть <code>3000</code> і натисніть <kbd>Enter</kbd>.',why:'<b>Навіщо:</b> висота поверху 3 метри. Revit рахує в міліметрах.'},
+   {do:'Новий рівень: [[Архитектура > Уровень]] або {{LL}}. Клацніть ліворуч над існуючими лініями, потім праворуч.',see:'<b>Побачите:</b> новий рівень, а в Диспетчере — новий план поверху.'},
+   {do:'Двічі клацніть назву рівня і перейменуйте, наприклад «1 поверх». На питання про перейменування видів відповідайте <span class="ui">Да</span>.'}]},
+  {t:'note',kind:'warn',h:'<p>Не копіюйте рівні командою «Копировать». Скопійований рівень не отримає свого плану поверху. Створюйте рівні тільки командою <span class="ui">Уровень</span>.</p>'},
+  {t:'h',h:'Осі (Сетка)'},
+  {t:'steps',items:[
+   {do:'Перейдіть на план <span class="ui">Уровень 1</span>.'},
+   {do:'[[Архитектура > Сетка]] або {{GR}}.'},
+   {do:'Клацніть початок осі, ведіть мишу вниз і клацніть кінець.',see:'<b>Побачите:</b> вісь з кружечком і номером 1.'},
+   {do:'Наступну вісь почніть праворуч. Поки не клацнули, введіть з клавіатури відстань, наприклад <code>6000</code>, і <kbd>Enter</kbd>.',see:'<b>Побачите:</b> вісь 2 рівно через 6 м. Номери Revit ставить сам.'},
+   {do:'Для горизонтальних осей побудуйте одну, двічі клацніть її номер і введіть <code>А</code>.',see:'<b>Побачите:</b> далі осі підуть Б, В…'}]},
+  {t:'quiz',q:'Як правильно додати третій поверх?',opts:['Скопіювати Уровень 2 вгору','Команда Архитектура › Уровень на фасаді'],a:1,ex:'Тільки команда «Уровень» створює разом із рівнем його план у Диспетчере проекта.'}
+ ]},
+{
+ id:'walls', title:'Стіни',
+ short:'Перший справжній елемент: обираємо тип, висоту і креслимо.',
+ goals:['Будуєте стіни точних розмірів','Розумієте Линию привязки'],
+ blocks:[
+  {t:'steps',items:[
+   {do:'Відкрийте план <span class="ui">Уровень 1</span>.'},
+   {do:'[[Архитектура > Стена]] або {{WA}}.',see:'<b>Побачите:</b> стрічка стане зеленуватою (вкладка <span class="ui">Изменить | Разместить Стена</span>), а в Свойствах — тип стіни.'},
+   {do:'У списку вгорі <span class="ui">Свойства</span> оберіть тип, наприклад <span class="ui">Базовая стена – 200 мм</span>.'},
+   {do:'Під стрічкою на <span class="ui">Панели параметров</span> перевірте: <span class="ui">Высота</span> → <span class="ui">Уровень 2</span>; галочка <span class="ui">Цепь</span> увімкнена.',why:'<b>Навіщо:</b> стіна підніметься до другого поверху. «Цепь» дозволяє креслити стіни підряд, як ламану лінію.'},
+   {do:'Клацніть першу точку. Ведіть мишу праворуч, наберіть <code>6000</code> і <kbd>Enter</kbd>. Далі вниз <code>8000</code>, ліворуч <code>6000</code>, і клацніть у першу точку.',see:'<b>Побачите:</b> прямокутник стін 6×8 м. Сині тимчасові розміри показують довжину під час креслення.'},
+   {do:'Двічі натисніть <kbd>Esc</kbd>, щоб вийти з команди.'}]},
+  {t:'h',h:'Линия привязки — по якому краю креслимо'},
+  {t:'table',head:['Варіант','Коли використовувати'],rows:[
+   ['Осевая линия стены','Стіна стоїть рівно по осі (за замовчуванням)'],
+   ['Чистовая поверхность: наружная','Знаєте зовнішній розмір будинку'],
+   ['Чистовая поверхность: внутренняя','Знаєте внутрішній розмір кімнати']]},
+  {t:'note',kind:'tip',h:'<p>Зовнішні стіни креслить <b>за годинниковою стрілкою</b>. Тоді зовнішній бік стіни буде назовні. Стіна вивернулась? Виділіть її і натисніть <kbd>Пробел</kbd> або сині стрілочки.</p>'},
+  {t:'quiz',q:'Як задати точну довжину стіни 4500 мм?',opts:['Підвести мишу на око','Під час креслення набрати 4500 і Enter','Потім розтягнути стіну'],a:1,ex:'Число, набране під час креслення, Revit одразу використовує як довжину.'}
+ ]},
+{
+ id:'doors', title:'Двері та вікна',
+ short:'Вставляємо в стіни, розвертаємо, задаємо відступи.',
+ goals:['Ставите двері й вікна точно','Змінюєте бік відкривання і висоту підвіконня'],
+ blocks:[
+  {t:'steps',items:[
+   {do:'[[Архитектура > Дверь]] ({{DR}}) або [[Архитектура > Окно]] ({{WN}}).'},
+   {do:'Оберіть тип у списку <span class="ui">Свойства</span>.',why:'<b>Навіщо:</b> тип визначає розмір прорізу, наприклад 900×2100 мм.'},
+   {do:'Наведіть курсор на стіну.',see:'<b>Побачите:</b> контур дверей «прилипне» до стіни. Поза стіною двері не ставляться — так і має бути.'},
+   {do:'Клацніть, щоб поставити. Поки двері не поставлені, <kbd>Пробел</kbd> змінює бік відкривання.'},
+   {do:'Після вставлення клацніть синє число тимчасового розміру і введіть відступ, наприклад <code>500</code>.',see:'<b>Побачите:</b> двері пересунуться на 500 мм від сусідньої стіни.'},
+   {do:'Для вікна задайте висоту від підлоги: в <span class="ui">Свойствах</span> параметр <span class="ui">Высота нижнего бруса</span>, наприклад <code>900</code>.'}]},
+  {t:'note',kind:'idea',h:'<p>Немає потрібного вікна? [[Вставка > Загрузить семейство]] і оберіть файл <code>.rfa</code> з папки бібліотеки (Окна, Двери).</p>'},
+  {t:'quiz',q:'Чому двері не ставляться на порожнє місце?',opts:['Помилка програми','Двері — елемент, що вставляється тільки в стіну','Треба спершу зберегти файл'],a:1,ex:'Двері й вікна прив’язані до стіни-«господаря». Без стіни їм немає куди стати.'}
+ ]},
+{
+ id:'floors', title:'Перекриття',
+ short:'Перший ескіз: замкнений контур по стінах.',
+ goals:['Створюєте перекриття по стінах','Розумієте режим ескізу'],
+ blocks:[
+  {t:'steps',items:[
+   {do:'На плані <span class="ui">Уровень 1</span>: [[Архитектура > Перекрытие]].',see:'<b>Побачите:</b> режим ескізу. Решта моделі стане блідою, а на стрічці з’являться інструменти малювання контуру.'},
+   {do:'Оберіть інструмент [[Выбрать стены]] (значок стіни зі стрілкою).'},
+   {do:'Клацніть по черзі кожну зовнішню стіну.',see:'<b>Побачите:</b> рожеві лінії контуру вздовж стін.'},
+   {do:'Перевірте, що контур замкнений: без розривів і зайвих хвостиків.'},
+   {do:'Натисніть зелену галочку [[Завершить режим редактирования]].',see:'<b>Побачите:</b> перекриття. Revit може спитати, чи приєднати стіни — відповідайте за потребою.'},
+   {do:'Відкрийте 3D і подивіться результат.'}]},
+  {t:'note',kind:'warn',h:'<p><b>«Линии пересекаются» або «Контур не замкнут»</b> — у контурі є розрив чи накладання. Наблизьте кути, видаліть зайві лінії або з’єднайте їх командою <span class="ui">Обрезать/удлинить до угла</span> ({{TR}}).</p>'},
+  {t:'quiz',q:'Що натиснути, коли контур готовий?',opts:['Esc','Зелену галочку «Завершить режим редактирования»','Ctrl + S'],a:1,ex:'Esc скасує ескіз. Зелена галочка завершує ескіз і створює перекриття.'}
+ ]},
+{
+ id:'edit', title:'Виділення та редагування',
+ short:'Як виділяти, переміщати, копіювати, міняти тип.',
+ goals:['Виділяєте потрібне без зайвого','Користуєтеся вкладкою Изменить'],
+ blocks:[
+  {t:'h',h:'Виділення'},
+  {t:'table',head:['Дія','Як'],rows:[
+   ['Один елемент','Клацнути'],
+   ['Додати до виділення','<kbd>Ctrl</kbd> + клацання'],
+   ['Прибрати з виділення','<kbd>Shift</kbd> + клацання'],
+   ['Тільки те, що повністю в рамці','Рамка зліва направо'],
+   ['Усе, що зачепила рамка','Рамка справа наліво'],
+   ['Ланцюжок стін','Навести, натиснути <kbd>Tab</kbd>, клацнути'],
+   ['Лишити тільки стіни, двері…','<span class="ui">Фильтр</span> (воронка внизу праворуч)'],
+   ['Зняти виділення','<kbd>Esc</kbd>']]},
+  {t:'h',h:'Команди вкладки «Изменить»'},
+  {t:'table',head:['Команда','Клавіші','Що робить'],rows:[
+   ['Переместить','{{MV}}','Пересунути'],
+   ['Копировать','{{CO}}','Скопіювати'],
+   ['Повернуть','{{RO}}','Повернути на кут'],
+   ['Зеркально отразить – выбрать ось','{{MM}}','Дзеркальна копія'],
+   ['Выровнять','{{AL}}','Вирівняти по іншому елементу'],
+   ['Смещение','{{OF}}','Паралельна копія на відстані'],
+   ['Обрезать/удлинить до угла','{{TR}}','З’єднати дві стіни в кут'],
+   ['Разделить элемент','{{SL}}','Розрізати стіну на дві'],
+   ['Массив','{{AR}}','Ряд однакових елементів'],
+   ['Удалить','<kbd>Delete</kbd>','Видалити']]},
+  {t:'h',h:'Приклад: пересунути стіну на 1 метр'},
+  {t:'steps',items:[
+   {do:'Клацніть стіну.',see:'<b>Побачите:</b> стіна стане синьою, з’явиться вкладка <span class="ui">Изменить | Стены</span>.'},
+   {do:'Натисніть {{MV}}.'},
+   {do:'Клацніть будь-яку точку на стіні — це точка «звідки».'},
+   {do:'Поведіть мишу в потрібний бік, наберіть <code>1000</code> і <kbd>Enter</kbd>.'}]},
+  {t:'note',kind:'tip',h:'<p><b>Змінити тип:</b> виділіть елемент і оберіть інший тип у списку вгорі <span class="ui">Свойства</span>. <b>Скасувати дію:</b> <kbd>Ctrl</kbd>+<kbd>Z</kbd>.</p>'}
+ ]},
+{
+ id:'save', title:'Збереження і типові помилки',
+ short:'Резервні копії, версії файлів, що робити, коли «нічого не працює».',
+ goals:['Не втрачаєте роботу','Самі виправляєте типові проблеми'],
+ blocks:[
+  {t:'steps',items:[
+   {do:'Зберігайте часто: <kbd>Ctrl</kbd>+<kbd>S</kbd>.',why:'<b>Навіщо:</b> Revit іноді «вилітає». Він нагадує про збереження кожні 30 хвилин — не натискайте «Отложить».'},
+   {do:'Не лякайтеся файлів <code>Будинок.0001.rvt</code>, <code>Будинок.0002.rvt</code>.',why:'<b>Це:</b> резервні копії. Працюйте з файлом без номера.'},
+   {do:'Перевірте версію Revit у викладача.',why:'<b>Навіщо:</b> файл з Revit 2024 не відкриється в 2023 чи 2022.'}]},
+  {t:'h',h:'Що робити, якщо…'},
+  {t:'table',head:['Проблема','Причина і рішення'],rows:[
+   ['Програма «не слухається»','Ви досі в іншій команді. Двічі <kbd>Esc</kbd>'],
+   ['Не видно щойно створеного','Ви на іншому рівні. Відкрийте потрібний план або 3D'],
+   ['Стіна вивернута','Виділіть і натисніть <kbd>Пробел</kbd>'],
+   ['Перекриття не створюється','Контур не замкнений або лінії перетинаються'],
+   ['Елемент зник з виду','Лампочка на Панели управления видом — <span class="ui">Показать скрытые элементы</span>'],
+   ['Зникла панель Свойства','{{PP}} або <span class="ui">Вид › Пользовательский интерфейс</span>'],
+   ['Розміри у футах','<span class="ui">Управление › Единицы проекта › Длина</span> → Миллиметры']]},
+  {t:'note',kind:'tip',h:'<p>Гарячі клавіші в Revit — це <b>дві літери поспіль</b>, без <kbd>Ctrl</kbd>, на англійській розкладці. Якщо {{WA}} не працює — перемкніть мову клавіатури на EN.</p>'}
+ ]},
+{
+ id:'practice', title:'Практика: маленький будиночок',
+ short:'Усе разом за 40 хвилин. Галочки зберігаються.',
+ goals:['Самостійно проходите весь цикл від нуля до 3D'],
+ blocks:[
+  {t:'p',h:'Виконуйте по порядку і ставте галочки. Застрягли — поверніться до уроку з потрібною темою.'},
+  {t:'check',items:[
+   'Створити проєкт з архітектурного шаблону і зберегти як «Будиночок»',
+   'На фасаді Юг задати висоту Уровень 2 = 3000 мм',
+   'На плані Уровень 1 побудувати осі 1 і 2 з кроком 6000 мм',
+   'Побудувати осі А і Б з кроком 8000 мм',
+   'Побудувати зовнішні стіни 6000 × 8000 мм по осях, висотою до Уровень 2',
+   'Додати одну внутрішню перегородку тоншого типу',
+   'Вставити вхідні двері з відступом 500 мм від кута',
+   'Вставити 3 вікна з висотою нижнього бруса 900 мм',
+   'Створити перекриття на Уровень 1 через «Выбрать стены»',
+   'Оглянути модель у 3D з усіх боків (Shift + коліщатко)',
+   'Відкрити фасад Юг і перевірити двері та вікна',
+   'Зберегти проєкт (Ctrl + S)']}
+ ]}
+];
+
+const KEYS=[
+ ['WA','Стена','Побудувати стіну'],['DR','Дверь','Вставити двері'],['WN','Окно','Вставити вікно'],
+ ['LL','Уровень','Новий рівень'],['GR','Сетка','Нова вісь'],['MV','Переместить','Пересунути'],
+ ['CO','Копировать','Копіювати'],['RO','Повернуть','Повернути'],['MM','Зеркально отразить','Дзеркально'],
+ ['AL','Выровнять','Вирівняти'],['OF','Смещение','Паралельна копія'],['TR','Обрезать/удлинить до угла','З’єднати в кут'],
+ ['SL','Разделить элемент','Розрізати'],['AR','Массив','Масив'],['DI','Параллельный размер','Поставити розмір'],
+ ['PP','Свойства','Показати панель властивостей'],['ZE','Показать в размер экрана','Показати все'],
+ ['VV','Видимость/Графика','Що показувати на виді'],['HH','Скрыть элемент (временно)','Тимчасово сховати'],
+ ['HR','Восстановить временно скрытые','Повернути сховане'],['Ctrl+Z','Отменить','Скасувати дію'],['Ctrl+S','Сохранить','Зберегти']];
+
+const GLOSS=[
+ ['BIM','—','Інформаційна модель будівлі: 3D-модель, у якій кожен елемент знає свої розміри, матеріал і місце.'],
+ ['Вид','Вид','Спосіб показу моделі: план, фасад, розріз, 3D. Усі види показують одну модель.'],
+ ['Рівень','Уровень','Горизонтальна площина на певній висоті — зазвичай поверх.'],
+ ['Вісь','Сетка (ось)','Координаційна лінія для розміщення стін і колон.'],
+ ['Сімейство','Семейство','Група однакових за будовою елементів: «Двері одностулкові».'],
+ ['Тип','Тип','Варіант сімейства з конкретними розмірами: 900×2100 мм.'],
+ ['Екземпляр','Экземпляр','Один конкретний елемент у моделі. Змінюєте його параметри — змінюється тільки він.'],
+ ['Шаблон','Шаблон проекта','Заготовка проєкту з одиницями, типами і стилями. Файл .rte.'],
+ ['Властивості','Свойства','Панель з параметрами виділеного елемента.'],
+ ['Селектор типів','Селектор типов','Список угорі панелі Свойства для вибору типу.'],
+ ['Диспетчер проєкту','Диспетчер проекта','Дерево всіх видів, аркушів і сімейств проєкту.'],
+ ['Ескіз','Эскиз','Режим малювання контуру (перекриття, дах). Завершується зеленою галочкою.'],
+ ['Лінія прив’язки','Линия привязки','По якій лінії стіни ви креслите: осі, зовнішньому чи внутрішньому краю.'],
+ ['Тимчасовий розмір','Временный размер','Синій розмір, що з’являється біля виділеного елемента. Клацніть число, щоб змінити.'],
+ ['Аркуш','Лист','Сторінка креслення для друку з рамкою і штампом.'],
+ ['Стрічка','Лента','Верхня панель із вкладками та кнопками команд.']];
+
+const MAP={
+ qat:['Панель быстрого доступа','Найчастіші дії: відкрити, зберегти, скасувати (Ctrl+Z), розмір, кнопка 3D-виду (будиночок).'],
+ tabs:['Вкладки ленты','<span class="ui">Архитектура</span> — стіни, двері, вікна, перекриття, рівні. <span class="ui">Вставка</span> — завантажити сімейства. <span class="ui">Аннотации</span> — розміри, тексти. <span class="ui">Вид</span> — розрізи, 3D, аркуші. <span class="ui">Управление</span> — налаштування проєкту.'],
+ rib:['Лента (панели инструментов)','Кнопки команд обраної вкладки, згруповані в панелі. Наведіть курсор на кнопку і зачекайте — з’явиться підказка з гарячою клавішею.'],
+ opt:['Панель параметров','З’являється під час команди. Для стіни тут висота, лінія прив’язки, галочка «Цепь». Перевіряйте її щоразу.'],
+ props:['Свойства','Угорі — <span class="ui">Селектор типов</span>: обираєте тип. Нижче — параметри виділеного елемента: рівень, висота, зміщення. Нічого не виділено — показує параметри виду.'],
+ pb:['Диспетчер проекта','Зміст проєкту: <span class="ui">Планы этажей</span>, <span class="ui">Фасады</span>, <span class="ui">3D виды</span>, <span class="ui">Листы</span>, <span class="ui">Семейства</span>. Подвійне клацання відкриває вид.'],
+ view:['Графическая область','Місце, де ви креслите й бачите модель. Кожен відкритий вид — окрема вкладка вгорі цієї області.'],
+ cube:['Видовой куб','Є тільки в 3D. Клацання по грані повертає модель цією стороною.'],
+ vcb:['Панель управления видом','Масштаб, рівень деталізації, візуальний стиль (каркас, тонування, реалістичний), лампочка «Показать скрытые элементы».'],
+ status:['Строка состояния','Підказка, що робити далі. Справа — значок фільтра з кількістю виділених елементів.']
+};
+
+/* ===== стан ===== */
+const SKEY='revit24ru-v1';
+let state={done:[],checks:{}};
+try{const s=JSON.parse(localStorage.getItem(SKEY)||'null');if(s)state=Object.assign(state,s)}catch(e){}
+function save(){try{localStorage.setItem(SKEY,JSON.stringify(state))}catch(e){}}
+
+/* ===== розмітка ===== */
+function fmt(s){
+ return s.replace(/\[\[(.+?)\]\]/g,(m,p)=>'<span class="path">'+p.split('>').map(x=>'<span class="ui">'+x.trim()+'</span>').join('<span class="sep">›</span>')+'</span>')
+         .replace(/\{\{(.+?)\}\}/g,(m,k)=>'<kbd>'+k+'</kbd>');
+}
+const levelSvg='<svg width="16" height="12" viewBox="0 0 16 12" aria-hidden="true"><path d="M1 1h14L8 11z" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>';
+function elev(i){const v=(i*3).toFixed(3);return (i===0?'±':'+')+v}
+
+let qid=0;
+function block(b,lid){
+ switch(b.t){
+  case 'p':return '<p>'+fmt(b.h)+'</p>';
+  case 'h':return '<h2>'+b.h+'</h2>';
+  case 'note':return '<div class="note '+b.kind+'"><span class="tag">'+({tip:'Порада',warn:'Увага',idea:'Простими словами'}[b.kind])+'</span><div>'+fmt(b.h)+'</div></div>';
+  case 'table':return '<div class="tbl"><table><thead><tr>'+b.head.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+b.rows.map(r=>'<tr>'+r.map(c=>'<td>'+fmt(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+  case 'steps':return '<ol class="steps">'+b.items.map(s=>'<li><div><div class="do">'+fmt(s.do)+'</div>'+(s.see?'<div class="see">'+fmt(s.see)+'</div>':'')+(s.why?'<div class="why">'+fmt(s.why)+'</div>':'')+'</div></li>').join('')+'</ol>';
+  case 'quiz':{const id='q'+(qid++);return '<div class="quiz" data-a="'+b.a+'" id="'+id+'"><div class="q"><small>Перевірте себе</small>'+fmt(b.q)+'</div><div class="opts">'+b.opts.map((o,i)=>'<button class="opt" data-i="'+i+'">'+fmt(o)+'</button>').join('')+'</div><div class="ex" hidden>'+fmt(b.ex)+'</div></div>'}
+  case 'check':return '<ul class="check">'+b.items.map((it,i)=>{const k=lid+':'+i;return '<li><label><input type="checkbox" id="c-'+lid+'-'+i+'" data-k="'+k+'"'+(state.checks[k]?' checked':'')+'><span>'+fmt(it)+'</span></label></li>'}).join('')+'</ul>';
+  case 'map':return '<div class="mapwrap"><div class="rv" role="group" aria-label="Схема вікна Revit">'+
+   '<button class="z-qat" data-z="qat">Панель быстрого доступа  · 💾 ↶ ⌂</button>'+
+   '<button class="z-tabs" data-z="tabs">Файл · Архитектура · Конструкция · Системы · Вставка · Аннотации · Анализ · Вид · Управление · Изменить</button>'+
+   '<button class="z-rib" data-z="rib">Лента: Стена · Дверь · Окно · Перекрытие · Крыша · Уровень · Сетка</button>'+
+   '<button class="z-opt" data-z="opt">Панель параметров: Высота ▾ Уровень 2 · Линия привязки ▾ · ☑ Цепь</button>'+
+   '<div class="z-left"><button data-z="props">Свойства<br>[Базовая стена 200 мм ▾]<br>Зависимость снизу…</button><button data-z="pb">Диспетчер проекта<br>▸ Планы этажей<br>▸ Фасады<br>▸ 3D виды</button></div>'+
+   '<button class="z-view" data-z="view">Графическая область<br>(план «Уровень 1»)</button>'+
+   '<button class="z-status" data-z="status">Строка состояния</button>'+
+   '<button class="z-vcb" data-z="vcb">1 : 100 · ▭ · ◐ · 💡 — Панель управления видом</button>'+
+   '</div></div><div class="mapinfo" id="mapinfo" aria-live="polite"><h3>Натисніть на частину схеми</h3><p class="muted">Тут з’явиться її назва в програмі і для чого вона.</p></div>';
+ }
+ return '';
+}
+
+/* ===== сторінки ===== */
+function pageHome(){
+ const n=state.done.length;
+ return '<div class="level">'+levelSvg+'<span>СТАРТ ±0.000</span></div>'+
+ '<h1>Revit 2024 з нуля: російський інтерфейс</h1>'+
+ '<p class="lead">Покроковий курс для тих, хто відкриває Revit уперше. Кожен крок пояснює, що натиснути, що з’явиться на екрані і навіщо це потрібно.</p>'+
+ '<div class="note idea"><span class="tag">Як читати</span><div><p>Назви кнопок виділено так: [[Архитектура > Стена]] — шукайте ці слова в програмі по черзі. Гарячі клавіші: {{WA}}. Зелена смужка в кроці — що ви побачите. Після уроку натисніть «Урок пройдено»: прогрес збережеться в цьому браузері.</p></div></div>'+
+ '<h2>Уроки'+(n?' <span class="muted" style="font-size:15px">· пройдено '+n+' з '+LESSONS.length+'</span>':'')+'</h2>'+
+ '<div class="cards">'+LESSONS.map((l,i)=>'<a class="card'+(state.done.includes(l.id)?' done':'')+'" href="#'+l.id+'"><span class="n">Урок '+String(i+1).padStart(2,'0')+'</span><h3>'+l.title+'</h3><p>'+l.short+'</p></a>').join('')+'</div>'+
+ '<h2>Довідка</h2><div class="cards"><a class="card" href="#keys"><span class="n">Шпаргалка</span><h3>Гарячі клавіші</h3><p>Усі команди з пошуком.</p></a><a class="card" href="#glossary"><span class="n">Словник</span><h3>Терміни</h3><p>Українською і як у програмі.</p></a></div>'+
+ '<p class="muted" style="font-size:13px">Назви кнопок можуть трохи відрізнятися в різних збірках локалізації. Якщо не знайшли кнопку — наведіть курсор на іконку і прочитайте підказку. <button class="reset" id="reset">Скинути прогрес</button></p>';
+}
+function pageLesson(i){
+ const l=LESSONS[i];qid=0;
+ const prev=i>0?LESSONS[i-1]:null,next=LESSONS[i+1];
+ const done=state.done.includes(l.id);
+ return '<div class="level">'+levelSvg+'<span>УРОК '+String(i+1).padStart(2,'0')+' · '+elev(i+1)+'</span></div>'+
+ '<h1>'+l.title+'</h1>'+
+ '<div class="goal">'+l.goals.map(g=>'<span>'+g+'</span>').join('')+'</div>'+
+ l.blocks.map(b=>block(b,l.id)).join('')+
+ '<button class="donebtn'+(done?' is':'')+'" id="doneBtn" data-id="'+l.id+'">'+(done?'✓ Урок пройдено':'Позначити урок пройденим')+'</button>'+
+ '<div class="pager">'+(prev?'<a href="#'+prev.id+'"><small>← Попередній</small>'+prev.title+'</a>':'<a href="#home"><small>← До змісту</small>Початок</a>')+
+ (next?'<a class="next" href="#'+next.id+'"><small>Наступний →</small>'+next.title+'</a>':'<a class="next" href="#keys"><small>Далі →</small>Гарячі клавіші</a>')+'</div>';
+}
+function pageKeys(){
+ return '<div class="level">'+levelSvg+'<span>ДОВІДКА</span></div><h1>Гарячі клавіші</h1><p class="lead">Набирайте дві літери поспіль на англійській розкладці, без Ctrl.</p>'+
+ '<input class="search" id="ks" type="search" placeholder="Пошук: стіна, MV, копировать…" aria-label="Пошук клавіш">'+
+ '<div class="tbl"><table><thead><tr><th>Клавіші</th><th>Команда в програмі</th><th>Що робить</th></tr></thead><tbody id="kt">'+
+ KEYS.map(k=>'<tr data-s="'+k.join(' ').toLowerCase()+'"><td><kbd>'+k[0]+'</kbd></td><td><span class="ui">'+k[1]+'</span></td><td>'+k[2]+'</td></tr>').join('')+'</tbody></table></div>';
+}
+function pageGloss(){
+ return '<div class="level">'+levelSvg+'<span>ДОВІДКА</span></div><h1>Словник термінів</h1><p class="lead">Українська назва, як це в російському інтерфейсі, і пояснення простими словами.</p>'+
+ '<input class="search" id="gs" type="search" placeholder="Пошук терміну…" aria-label="Пошук терміну">'+
+ '<div class="gl" id="gl">'+GLOSS.map(g=>'<div data-s="'+g.join(' ').toLowerCase()+'"><b>'+g[0]+'</b><span class="ru">'+g[1]+'</span><p>'+g[2]+'</p></div>').join('')+'</div>';
+}
+
+function renderSide(cur){
+ const s=document.getElementById('side');
+ s.innerHTML='<h4>Початок</h4><div class="nav"><a href="#home"'+(cur==='home'?' class="on"':'')+'><span class="n">00</span><span>Зміст і як читати</span><span></span></a></div>'+
+ '<h4>Уроки</h4><div class="nav">'+LESSONS.map((l,i)=>'<a href="#'+l.id+'"'+(cur===l.id?' class="on" aria-current="page"':'')+'><span class="n">'+String(i+1).padStart(2,'0')+'</span><span>'+l.title+'</span><span class="d'+(state.done.includes(l.id)?' done':'')+'"></span></a>').join('')+'</div>'+
+ '<h4>Довідка</h4><div class="nav"><a href="#keys"'+(cur==='keys'?' class="on"':'')+'><span class="n">⌨</span><span>Гарячі клавіші</span><span></span></a><a href="#glossary"'+(cur==='glossary'?' class="on"':'')+'><span class="n">Аа</span><span>Словник</span><span></span></a></div>';
+ const n=state.done.filter(id=>LESSONS.some(l=>l.id===id)).length;
+ document.getElementById('progTxt').textContent=n+' / '+LESSONS.length;
+ document.getElementById('progBar').style.width=(n/LESSONS.length*100)+'%';
+}
+
+function route(){
+ const h=(location.hash||'#home').slice(1);
+ const m=document.querySelector('#main .sheet');
+ const i=LESSONS.findIndex(l=>l.id===h);
+ let cur=h;
+ if(i>=0)m.innerHTML=pageLesson(i);
+ else if(h==='keys')m.innerHTML=pageKeys();
+ else if(h==='glossary')m.innerHTML=pageGloss();
+ else{m.innerHTML=pageHome();cur='home'}
+ renderSide(cur);
+ closeSide();
+ window.scrollTo(0,0);
+}
+
+/* ===== події ===== */
+document.addEventListener('click',e=>{
+ const o=e.target.closest('.opt');
+ if(o){const q=o.closest('.quiz');if(q.dataset.answered)return;q.dataset.answered=1;
+  const a=+q.dataset.a,i=+o.dataset.i;
+  q.querySelectorAll('.opt').forEach((b,j)=>{if(j===a)b.classList.add('right');else if(j===i)b.classList.add('wrong')});
+  const ex=q.querySelector('.ex');ex.hidden=false;ex.innerHTML='<b>'+(i===a?'Правильно.':'Не зовсім.')+'</b> '+ex.innerHTML;return}
+ const z=e.target.closest('[data-z]');
+ if(z){document.querySelectorAll('.rv [data-z]').forEach(b=>b.classList.toggle('on',b===z));
+  const d=MAP[z.dataset.z];document.getElementById('mapinfo').innerHTML='<h3><span class="ui">'+d[0]+'</span></h3><p>'+d[1]+'</p>';return}
+ const db=e.target.closest('#doneBtn');
+ if(db){const id=db.dataset.id;const k=state.done.indexOf(id);
+  if(k>=0)state.done.splice(k,1);else state.done.push(id);save();
+  const on=state.done.includes(id);db.classList.toggle('is',on);db.textContent=on?'✓ Урок пройдено':'Позначити урок пройденим';renderSide(id);return}
+ if(e.target.id==='reset'){state={done:[],checks:{}};save();route();return}
+});
+document.addEventListener('change',e=>{const k=e.target.dataset&&e.target.dataset.k;if(k){state.checks[k]=e.target.checked;save()}});
+document.addEventListener('input',e=>{
+ const map={ks:'#kt tr',gs:'#gl > div'};const sel=map[e.target.id];if(!sel)return;
+ const v=e.target.value.trim().toLowerCase();
+ document.querySelectorAll(sel).forEach(r=>r.hidden=v&&!r.dataset.s.includes(v));
+});
+const side=document.getElementById('side'),mb=document.getElementById('menuBtn');
+function closeSide(){side.classList.remove('open');mb.setAttribute('aria-expanded','false')}
+mb.addEventListener('click',()=>{const o=side.classList.toggle('open');mb.setAttribute('aria-expanded',String(o))});
+window.addEventListener('hashchange',route);
+route();
+</script>
+
+</body></html>
